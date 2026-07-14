@@ -27,5 +27,5 @@ jobs:
         env:
           JOBNIMBUS_API_KEY: ${{ secrets.JOBNIMBUS_API_KEY }}
           GOOGLE_SERVICE_ACCOUNT_FILE: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_FILE }}
-          SPREADSHEET_ID: ${{ secrets.GSHEET_ID }}
+          GSHEET_ID: ${{ secrets.GSHEET_ID }}
         run: python main.py
