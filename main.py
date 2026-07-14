@@ -92,8 +92,20 @@ def get_all_data(endpoint):
 # GOOGLE SHEETS CONNECT
 # ======================
 def connect_sheets(worksheet_name):
-    creds = Credentials.from_service_account_file(
-        os.getenv("GOOGLE_SERVICE_ACCOUNT_FILE"),
+    import json
+    import os
+    from google.oauth2.service_account import Credentials
+    import gspread
+
+    creds_json = os.getenv("GOOGLE_SERVICE_ACCOUNT_FILE")
+
+    if not creds_json:
+        raise ValueError("❌ GOOGLE_SERVICE_ACCOUNT_FILE is missing in secrets")
+
+    creds_dict = json.loads(creds_json)
+
+    creds = Credentials.from_service_account_info(
+        creds_dict,
         scopes=[
             "https://www.googleapis.com/auth/spreadsheets",
             "https://www.googleapis.com/auth/drive"
