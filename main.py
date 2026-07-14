@@ -31,7 +31,14 @@ SHEET_TAB_NAME = os.getenv("SHEET_TAB_NAME", "raw")
 
 # Load credentials JSON from environment variable
 
-GOOGLE_CREDS_JSON = os.getenv("GOOGLE_CREDS_JSON")
+#GOOGLE_CREDS_JSON = os.getenv("GOOGLE_CREDS_JSON")
+
+creds_dict = json.loads(os.getenv("GOOGLE_CREDS_JSON"))
+
+creds = Credentials.from_service_account_info(
+    creds_dict,
+    scopes=SCOPES
+)
 
 BASE_URL = "https://app.jobnimbus.com/api1"
 #endpoint = "/contacts"
