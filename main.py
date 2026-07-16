@@ -37,7 +37,7 @@ SHEET_TAB_NAME = os.getenv("SHEET_TAB_NAME", "raw")
 
 # Load credentials JSON from environment variable
 
-GOOGLE_SERVICE_ACCOUNT_FILE = os.getenv("GOOGLE_SERVICE_ACCOUNT_FILE")
+GOOGLE_CREDS_JSON = os.getenv("GOOGLE_SERVICE_ACCOUNT_FILE")
 
 
 BASE_URL = "https://app.jobnimbus.com/api1"
@@ -98,9 +98,12 @@ def get_all_data(endpoint):
 # GOOGLE SHEETS CONNECT
 # ======================
 def connect_sheets(worksheet_name):
-    creds_dict = json.loads(os.getenv("GOOGLE_SERVICE_ACCOUNT_FILE"))
+    if not GOOGLE_CREDS_JSON:
+        raise ValueError("Missing GOOGLE_SERVICE_ACCOUNT_FILE secret")
 
-    # 🔥 Fix newline issue in private key
+    creds_dict = json.loads(GOOGLE_CREDS_JSON)
+    
+    # 🔥 VERY IMPORTANT (fix newline issue)
     creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
     
     creds = Credentials.from_service_account_info(
