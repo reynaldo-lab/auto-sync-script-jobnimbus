@@ -51,7 +51,7 @@ def clean_jobs(df):
         "status","status_name","record_type_name",
         "address_line1","city","state_text","zip",
         "sales_rep_name","created_by_name",
-        "contract_amount","approved_estimate_total","invoice_total"
+        "contract_amount","approved_estimate_total","invoice_total","last_synced_at"
     ]
 
     existing_cols = [col for col in columns_to_keep if col in df.columns]
