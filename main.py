@@ -362,6 +362,7 @@ def main():
         df_tasks = pd.json_normalize(tasks)
         df_tasks = clean_dataframe(df_tasks)
         df_tasks = convert_all_date_columns(df_tasks)
+        df_tasks = clean_tasks(df_tasks)
         # 🔥 IMPORTANT: ensure unique ID
         if "jnid" not in df_tasks.columns:
             df_tasks["jnid"] = df_tasks["id"].astype(str)
