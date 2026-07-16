@@ -6,10 +6,16 @@ import json
 import gspread
 from google.oauth2.service_account import Credentials
 from dotenv import load_dotenv
+from cleaner_budget import clean_budgets
+from cleaner_estimates import clean_estimates
+from cleaner_invoices import clean_invoices
+from cleaner_materials import clean_material_orders
+from cleaner_payments import clean_payments
 load_dotenv()
 from datetime import datetime
 from cleaner_contacts import clean_contacts
-from cleaner_jobs import clean_jobs, convert_all_date_columns
+from cleaner_jobs import clean_jobs, convert_all_date_columns   
+from cleaner_workoders import clean_workorders
 
 # ======================
 # CONFIG (FROM ENV)
@@ -92,20 +98,8 @@ def get_all_data(endpoint):
 # GOOGLE SHEETS CONNECT
 # ======================
 def connect_sheets(worksheet_name):
-    import json
-    import os
-    from google.oauth2.service_account import Credentials
-    import gspread
-
-    creds_json = os.getenv("GOOGLE_SERVICE_ACCOUNT_FILE")
-
-    if not creds_json:
-        raise ValueError("❌ GOOGLE_SERVICE_ACCOUNT_FILE is missing in secrets")
-
-    creds_dict = json.loads(creds_json)
-
-    creds = Credentials.from_service_account_info(
-        creds_dict,
+    creds = Credentials.from_service_account_file(
+        os.getenv("GOOGLE_SERVICE_ACCOUNT_FILE"),
         scopes=[
             "https://www.googleapis.com/auth/spreadsheets",
             "https://www.googleapis.com/auth/drive"
@@ -146,7 +140,9 @@ def clean_dataframe(df):
 def sync_sheet(df, sheet):
     existing_data = sheet.get_all_records()
 
+    # ======================
     # FIRST RUN
+    # ======================
     if not existing_data:
         sheet.update([df.columns.values.tolist()])
         sheet.append_rows(df.values.tolist())
@@ -159,7 +155,10 @@ def sync_sheet(df, sheet):
     df["jnid"] = df["jnid"].astype(str)
     existing_df["jnid"] = existing_df["jnid"].astype(str)
 
-    # Create lookup for fast matching
+    # Align columns (IMPORTANT)
+    df = df.reindex(columns=existing_df.columns, fill_value="")
+
+    # Create lookup
     existing_lookup = {
         row["jnid"]: (idx, row)
         for idx, row in existing_df.iterrows()
@@ -174,9 +173,14 @@ def sync_sheet(df, sheet):
         if jnid in existing_lookup:
             sheet_index, old_row = existing_lookup[jnid]
 
-            # 👇 CHECK IF status_name CHANGED
-            if str(old_row.get("status_name", "")) != str(new_row.get("status_name", "")):
-                updates.append((sheet_index + 2, new_row))  # +2 for header + 1-index
+            # ======================
+            # ✅ COMPARE FULL ROW
+            # ======================
+            old_values = [str(old_row.get(col, "")).strip() for col in df.columns]
+            new_values = [str(new_row.get(col, "")).strip() for col in df.columns]
+
+            if old_values != new_values:
+                updates.append((sheet_index + 2, new_row))  # +2 for header
         else:
             new_rows.append(new_row)
 
@@ -200,7 +204,6 @@ def sync_sheet(df, sheet):
         sheet.append_rows(new_df.values.tolist())
 
     print("✅ Sync complete")
-    
 
 def upload_new_only(df, sheet):
 
@@ -311,7 +314,7 @@ def main():
         df_estimates = pd.json_normalize(estimates)
         df_estimates = clean_dataframe(df_estimates)
         df_estimates = convert_all_date_columns(df_estimates)
-
+        df_estimates = clean_estimates(df_estimates)
         # 🔥 IMPORTANT: ensure unique ID
         if "jnid" not in df_estimates.columns:
             df_estimates["jnid"] = df_estimates["id"].astype(str)
@@ -331,6 +334,7 @@ def main():
         df_budgets = pd.json_normalize(budgets)
         df_budgets = clean_dataframe(df_budgets)
         df_budgets = convert_all_date_columns(df_budgets)
+        df_budgets = clean_budgets(df_budgets)
 
         # 🔥 IMPORTANT: ensure unique ID
         if "jnid" not in df_budgets.columns:
@@ -386,6 +390,8 @@ def main():
         df_invoices = pd.json_normalize(invoices)
         df_invoices = clean_dataframe(df_invoices)
         df_invoices = convert_all_date_columns(df_invoices)
+        df_invoices = clean_invoices(df_invoices)
+        
         # 🔥 IMPORTANT: ensure unique ID
         if "jnid" not in df_invoices.columns:
             df_invoices["jnid"] = df_invoices["id"].astype(str)
@@ -404,6 +410,7 @@ def main():
         df_payments = pd.json_normalize(payments)
         df_payments = clean_dataframe(df_payments)
         df_payments = convert_all_date_columns(df_payments)
+        df_payments = clean_payments(df_payments)
         # 🔥 IMPORTANT: ensure unique ID
         if "jnid" not in df_payments.columns:
             df_payments["jnid"] = df_payments["id"].astype(str)
@@ -422,6 +429,7 @@ def main():
         df_materialsorder = pd.json_normalize(materialsorder)
         df_materialsorder = clean_dataframe(df_materialsorder)
         df_materialsorder = convert_all_date_columns(df_materialsorder)
+        df_materialsorder = clean_material_orders(df_materialsorder)
         # 🔥 IMPORTANT: ensure unique ID
         if "jnid" not in df_materialsorder.columns:
             df_materialsorder["jnid"] = df_materialsorder["id"].astype(str)
@@ -440,6 +448,7 @@ def main():
         df_workorder = pd.json_normalize(workorder)
         df_workorder = clean_dataframe(df_workorder)
         df_workorder = convert_all_date_columns(df_workorder)
+        df_workorder = clean_workorders(df_workorder)
         # 🔥 IMPORTANT: ensure unique ID
         if "jnid" not in df_workorder.columns:
             df_workorder["jnid"] = df_workorder["id"].astype(str)
