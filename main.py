@@ -98,8 +98,13 @@ def get_all_data(endpoint):
 # GOOGLE SHEETS CONNECT
 # ======================
 def connect_sheets(worksheet_name):
-    creds = Credentials.from_service_account_file(
-        os.getenv("GOOGLE_SERVICE_ACCOUNT_FILE"),
+    creds_dict = json.loads(os.getenv("GOOGLE_SERVICE_ACCOUNT_FILE"))
+
+    # 🔥 Fix newline issue in private key
+    creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
+    
+    creds = Credentials.from_service_account_info(
+        creds_dict,
         scopes=[
             "https://www.googleapis.com/auth/spreadsheets",
             "https://www.googleapis.com/auth/drive"
