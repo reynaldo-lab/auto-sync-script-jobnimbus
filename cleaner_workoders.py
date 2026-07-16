@@ -62,7 +62,7 @@ def clean_workorders(df):
         "parent_approved_invoice_due",
         "total_line_item_cost",
         "total_line_item_price",
-        "last_synced_at",
+        "last_synced_at"
     ]
 
     existing_cols = [col for col in columns_to_keep if col in df.columns]
