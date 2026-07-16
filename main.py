@@ -16,6 +16,7 @@ from datetime import datetime
 from cleaner_contacts import clean_contacts
 from cleaner_jobs import clean_jobs, convert_all_date_columns   
 from cleaner_workoders import clean_workorders
+from cleaner_tasks import clean_tasks
 
 # ======================
 # CONFIG (FROM ENV)
